@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
 
-  s.name            = 'logstash-input-s3'
+  s.name            = 'logstash-input-s3-bz'
   s.version         = '3.1.4'
   s.licenses        = ['Apache License (2.0)']
   s.summary         = "Stream events from files from a S3 bucket."
@@ -26,5 +26,8 @@ Gem::Specification.new do |s|
  # s.add_runtime_dependency 'aws-sdk-resources', '>= 2.0.33'
   s.add_development_dependency 'logstash-devutils'
   s.add_development_dependency "logstash-codec-json"
+  s.add_development_dependency 'rbzip2'
+  s.add_development_dependency 'bzip2-ruby'
+  s.add_development_dependency  'zopen', '~> 1.0', '>= 1.0.2'
 end
 

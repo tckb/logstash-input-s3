@@ -7,5 +7,6 @@ use_logstash_source = ENV["LOGSTASH_SOURCE"] && ENV["LOGSTASH_SOURCE"].to_s == "
 
 if Dir.exist?(logstash_path) && use_logstash_source
   gem 'logstash-core', :path => "#{logstash_path}/logstash-core"
+  gem 'bzip2-ruby', :git => 'https://github.com/chewi/bzip2-ruby.git' 
   gem 'logstash-core-plugin-api', :path => "#{logstash_path}/logstash-core-plugin-api"
 end

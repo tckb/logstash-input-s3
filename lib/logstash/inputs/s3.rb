@@ -8,6 +8,9 @@ require "stud/interval"
 require "stud/temporary"
 require "aws-sdk"
 require "logstash/inputs/s3/patch"
+require 'bzip2'
+require 'rbzip2'
+
 
 Aws.eager_autoload!
 # Stream events from files from a S3 bucket.
@@ -17,7 +20,7 @@ Aws.eager_autoload!
 class LogStash::Inputs::S3 < LogStash::Inputs::Base
   include LogStash::PluginMixins::AwsConfig::V2
 
-  config_name "s3"
+  config_name "s3-bz"
 
   default :codec, "plain"
 
@@ -234,6 +237,8 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
   def read_file(filename, &block)
     if gzip?(filename) 
       read_gzip_file(filename, block)
+    elsif bzip?(filename) 
+      read_bzip_file(filename, block)
     else
       read_plain_file(filename, block)
     end
@@ -262,12 +267,29 @@ class LogStash::Inputs::S3 < LogStash::Inputs::Base
     @logger.error("Gzip codec: We cannot uncompress the gzip file", :filename => filename)
     raise e
   end
+  private
+  def read_bzip_file(filename, block)
+    # Details about multiple streams and the usage of unused from: http://code.activestate.com/lists/ruby-talk/11168/
+    File.open(filename) do |zio|
+      while true do
+        io = Bzip2::Reader.open(filename)
+        io.each_line { |line| block.call(line) }
+        unused = io.unused
+        io.finish
+        break if unused.nil?
+        zio.pos -= unused.length # reset the position to the other block in the stream
+      end
+    end
+  end
 
   private
   def gzip?(filename)
     filename.end_with?('.gz')
   end
-  
+  private
+  def bzip?(filename)
+    filename.end_with?('.bz2')
+  end
   private
   def sincedb 
     @sincedb ||= if @sincedb_path.nil?
